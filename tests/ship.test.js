@@ -1,4 +1,4 @@
-import { Ship, Gameboard } from "../src/gameLogic.js";
+import { Ship, Gameboard, Player } from "../src/gameLogic.js";
 
 test("Ship initializes", () => {
     let ship = new Ship(3);
@@ -52,7 +52,7 @@ test("all ships sunk", () => {
 
     b.receiveAttack(5, 3);
     b.receiveAttack(5, 4);
-    
+
     expect(b.allShipsSunk()).toBe(true);
 });
 
@@ -63,4 +63,22 @@ test("missed shots", () => {
     b.receiveAttack(1, 0);
     b.receiveAttack(2, 3);
     expect(b.missedShots.length).toBe(2);
+});
+
+test("Player attack", () => {
+    const player = new Player();
+    const bot = new Player(true);
+
+    bot.board.placeShips(new Ship(4), 1, 1);
+
+    expect(player.attack(bot.board, 1, 2)).toBe("hit");
+});
+
+test("Bot makes a valid attack", () => {
+    const bot = new Player(true);
+    const player = new Player();
+    player.board.placeShips(new Ship(3), 2, 1);
+
+    let result = bot.randomAttack(player.board);
+    expect(["hit", "miss"]).toContain(result);
 });

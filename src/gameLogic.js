@@ -63,3 +63,27 @@ export class Gameboard {
         return this.ships.every((ship) => ship.isSunk());
     }
 }
+
+export class Player {
+    constructor(isAI = false) {
+        this.board = new Gameboard();
+        this.isAI = isAI;
+    }
+
+    attack(opponentBoard, x, y) {
+        return opponentBoard.receiveAttack(x, y);
+    }
+
+    randomAttack(opponentBoard) {
+        let x, y;
+        do {
+            x = Math.floor(Math.random() * 10);
+            y = Math.floor(Math.random() * 10);
+        } while (
+            opponentBoard.board[x][y] === "hit" ||
+            opponentBoard.board[x][y] === "miss"
+        );
+
+        return this.attack(opponentBoard, x, y);
+    }
+}
