@@ -1,9 +1,79 @@
+:root {
+    --bg: #68808a;
+    --board-bg: #bbd5dc;
+    --cell-bdr: 4px solid #68808a;
+    --hit: rgb(223, 102, 102);
+    --miss: rgb(140, 191, 208);
+}
+
 body {
     padding: 0;
     margin: 0;
     height: 100vh;
-    background: url("../images/ship.png");
-    background-repeat: no-repeat;
-    background-size: contain;
+    background-color: var(--bg);
     font-family: Arial, Helvetica, sans-serif;
+    display: grid;
+    grid-template-rows: 10vh 1fr;
+    align-items: center;
+    overflow: auto;
+}
+
+.text-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: white;
+    background-color: #333;
+    font-size: 35px;
+}
+
+.board-grid {
+    padding: 20px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    align-items: center;
+    justify-content: center;
+    gap: 10vh;
+}
+
+.board {
+    justify-self: center;
+    background-color: var(--board-bg);
+    display: grid;
+    grid-template-columns: repeat(10, 30px);
+    grid-template-rows: repeat(10, 30px);
+    gap: 3px;
+    padding: 0 3px 3px 0;
+}
+
+.disabled-board {
+    pointer-events: none; 
+    opacity: 0.5; 
+}
+
+.cell {
+    width: 30px;
+    height: 30px;
+    border: var(--cell-bdr);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+#computer-board .cell:hover {
+    background-color: var(--hit);
+}
+
+/* .ship{
+    background-color: gray;
+} */
+
+.hit {
+    background-color: var(--hit);
+}
+
+.miss {
+    background-color: var(--miss);
 }
