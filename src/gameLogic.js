@@ -70,20 +70,70 @@ export class Player {
         this.isAI = isAI;
     }
 
+    shipsSunk = 0;
+    #lastHit = null;
+    #hitQueue = [];
+
     attack(opponentBoard, x, y) {
         return opponentBoard.receiveAttack(x, y);
     }
 
-    randomAttack(opponentBoard) {
+    smartAttack(opponentBoard) {
         let x, y;
-        do {
-            x = Math.floor(Math.random() * 10);
-            y = Math.floor(Math.random() * 10);
-        } while (
-            opponentBoard.board[x][y] === "hit" ||
-            opponentBoard.board[x][y] === "miss"
-        );
 
-        return this.attack(opponentBoard, x, y);
+        if (this.#hitQueue.length > 0) {
+            [x, y] = this.#hitQueue.shift();
+        } else {
+            do {
+                x = Math.floor(Math.random() * 10);
+                y = Math.floor(Math.random() * 10);
+            } while (
+                opponentBoard.board[x][y] === "hit" ||
+                opponentBoard.board[x][y] === "miss"
+            );
+        }
+
+        const result = this.attack(opponentBoard, x, y);
+
+        if (result === "hit") {
+            let sunk = opponentBoard.ships.filter((ship) => ship.isSunk());
+            if (sunk.length > this.shipsSunk) {
+                this.shipsSunk++;
+                this.#lastHit = null;
+                this.#hitQueue = [];
+            } else {
+                this.#lastHit = { x, y };
+                this.addAdjacentTargets(x, y, opponentBoard);
+            }
+        } else if (this.#hitQueue.length === 0) {
+            this.#lastHit = null;
+        }
+
+        return result;
+    }
+
+    addAdjacentTargets(x, y, board) {
+        const directions = [
+            [0, 1],
+            [0, -1],
+            [1, 0],
+            [-1, 0],
+        ];
+
+        for (const [dx, dy] of directions) {
+            const newX = x + dx;
+            const newY = y + dy;
+
+            if (
+                newX >= 0 &&
+                newX < 10 &&
+                newY >= 0 &&
+                newY < 10 &&
+                board.board[newX][newY] !== "hit" &&
+                board.board[newX][newY] !== "miss"
+            ) {
+                this.#hitQueue.push([newX, newY]);
+            }
+        }
     }
 }
