@@ -35,12 +35,25 @@ class Gamehandler {
         }
     }
 
+    setUpComputerBoard() {
+        let lengths = [5, 4, 3, 3, 2];
+        lengths.forEach((length) => {
+            let ship, x, y, randomBoolean;
+
+            do {
+                ship = new Ship(length);
+                x = Math.floor(Math.random() * 10);
+                y = Math.floor(Math.random() * 10);
+                randomBoolean = Math.random() >= 0.5;
+            } while (
+                !this.computer.board.isPlacementValid(ship, x, y, randomBoolean)
+            );
+            this.computer.board.placeShips(ship, x, y, randomBoolean);
+        });
+    }
+
     arrangeShips() {
-        this.computer.board.placeShips(new Ship(5), 3, 0, true);
-        this.computer.board.placeShips(new Ship(4), 5, 8, true);
-        this.computer.board.placeShips(new Ship(3), 0, 3, true);
-        this.computer.board.placeShips(new Ship(3), 2, 5);
-        this.computer.board.placeShips(new Ship(2), 5, 4);
+        this.setUpComputerBoard();
 
         this.player.board.placeShips(new Ship(5), 5, 0);
         this.player.board.placeShips(new Ship(4), 5, 8, true);
