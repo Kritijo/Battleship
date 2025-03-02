@@ -31,9 +31,9 @@ function renderBoard(gameboard, elementId) {
 const player = new Player();
 const computer = new Player(true);
 
-computer.board.placeShips(new Ship(5), 5, 0, true);
-computer.board.placeShips(new Ship(4), 8, 3);
-computer.board.placeShips(new Ship(3), 0, 0);
+computer.board.placeShips(new Ship(5), 3, 0, true);
+computer.board.placeShips(new Ship(4), 5, 8, true);
+computer.board.placeShips(new Ship(3), 0, 3, true);
 computer.board.placeShips(new Ship(3), 2, 5);
 computer.board.placeShips(new Ship(2), 5, 4);
 
@@ -79,6 +79,7 @@ document.getElementById("computer-board").addEventListener("click", (e) => {
 function playerMove(x, y) {
     player.attack(computer.board, x, y);
     renderBoard(computer.board, "computer-board");
+    updateShipStatus();
 
     if (computer.board.allShipsSunk()) {
         text_box.textContent = "You win! ✨";
@@ -98,36 +99,71 @@ function playerMove(x, y) {
 }
 
 function computerMove() {
-    function attackAgain() {
-        let result = computer.randomAttack(player.board);
+    let result;
+    do {
+        result = computer.smartAttack(player.board);
         renderBoard(player.board, "player-board");
-
-        if (player.board.allShipsSunk()) {
-            text_box.textContent = "Opponent wins! ✨";
-            renderBoard(player.board, "player-board");
-            gameOver = true;
-            disableBoards();
-            return;
-        }
+        updateShipStatus();
 
         if (result === "hit") {
             text_box.textContent = "Opponent hit! Attacking again...";
-            setTimeout(attackAgain, 800);
-        } else {
-            text_box.textContent = "Your turn.";
-            document
-                .getElementById("player-board")
-                .classList.add("disabled-board");
-            document
-                .getElementById("computer-board")
-                .classList.remove("disabled-board");
         }
+    } while (result === "hit");
+
+    if (player.board.allShipsSunk()) {
+        text_box.textContent = "Computer wins!";
+        alert("Game over!");
+        gameOver = true;
+        return;
     }
 
-    attackAgain();
+    text_box.textContent = "Your turn.";
+
+    document.getElementById("player-board").classList.add("disabled-board");
+    document
+        .getElementById("computer-board")
+        .classList.remove("disabled-board");
 }
 
 function disableBoards() {
     document.getElementById("player-board").classList.add("disabled-board");
     document.getElementById("computer-board").classList.add("disabled-board");
+}
+
+function updateShipStatus() {
+    const playerStatusList = document.getElementById("player-ship-status");
+    const computerStatusList = document.getElementById("computer-ship-status");
+
+    playerStatusList.innerHTML = "";
+    computerStatusList.innerHTML = "";
+
+    const ships = [
+        "Carrier",
+        "Battleship",
+        "Destroyer",
+        "Submarine",
+        "Patrol Boat",
+    ];
+
+    player.board.ships.forEach((ship, index) => {
+        const shipItem = document.createElement("li");
+        shipItem.textContent = `${ships[index]} (${ship.length})`;
+
+        if (ship.isSunk()) {
+            shipItem.classList.add("sunk");
+        }
+
+        playerStatusList.appendChild(shipItem);
+    });
+
+    computer.board.ships.forEach((ship, index) => {
+        const shipItem = document.createElement("li");
+        shipItem.textContent = `${ships[index]} (${ship.length})`;
+
+        if (ship.isSunk()) {
+            shipItem.classList.add("sunk"); 
+        }
+
+        computerStatusList.appendChild(shipItem);
+    });
 }

@@ -13,7 +13,7 @@ body {
     background-color: var(--bg);
     font-family: Arial, Helvetica, sans-serif;
     display: grid;
-    grid-template-rows: 10vh 1fr;
+    grid-template-rows: 8vh 0.5fr 1.5fr;
     align-items: center;
     overflow: auto;
 }
@@ -25,7 +25,7 @@ body {
     height: 100%;
     color: white;
     background-color: #333;
-    font-size: 35px;
+    font-size: 30px;
 }
 
 .board-grid {
@@ -76,4 +76,36 @@ body {
 
 .miss {
     background-color: var(--miss);
+}
+
+.ship-status-container {
+    display: flex;
+    justify-content: space-around;
+    margin-top:10px;
+}
+
+.ship-status {
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    background-color: #f4f4f4;
+    width: 180px;
+    text-align: center;
+}
+
+.ship-status ul {
+    list-style: none;
+    padding: 0;
+}
+
+.ship-status li {
+    padding: 5px;
+    font-size: 16px;
+    font-weight: bold;
+    color: black;
+}
+
+.ship-status .sunk {
+    color: red;
+    text-decoration: line-through;
 }
