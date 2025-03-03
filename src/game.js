@@ -5,10 +5,12 @@ class Gamehandler {
     constructor() {
         this.player = new Player();
         this.computer = new Player(true);
-        this.arrangeShips();
+        this.#arrangeShips();
     }
 
-    renderBoard(gameboard, elementId) {
+    #gameStart = false;
+
+    #renderBoard(gameboard, elementId) {
         const boardElement = document.getElementById(elementId);
         boardElement.innerHTML = "";
 
@@ -21,7 +23,12 @@ class Gamehandler {
 
                 const value = gameboard.board[x][y];
 
-                if (value instanceof Ship) cell.classList.add("ship");
+                if (
+                    value instanceof Ship &&
+                    elementId !== "computer-board" &&
+                    !this.#gameStart
+                )
+                    cell.classList.add("ship");
                 else if (value === "hit") {
                     cell.classList.add("hit");
                     cell.textContent = "❌";
@@ -35,8 +42,8 @@ class Gamehandler {
         }
     }
 
-    setUpComputerBoard() {
-        let lengths = [5, 4, 3, 3, 2];
+    #setUpComputerBoard() {
+        const lengths = [5, 4, 3, 3, 2];
         lengths.forEach((length) => {
             let ship, x, y, randomBoolean;
 
@@ -52,28 +59,106 @@ class Gamehandler {
         });
     }
 
-    arrangeShips() {
-        this.setUpComputerBoard();
+    #setUpShipItems() {
+        const shipContainer = document.querySelector(".ship-container");
 
-        this.player.board.placeShips(new Ship(5), 5, 0);
-        this.player.board.placeShips(new Ship(4), 5, 8, true);
-        this.player.board.placeShips(new Ship(3), 9, 0);
-        this.player.board.placeShips(new Ship(3), 2, 5);
-        this.player.board.placeShips(new Ship(2), 2, 3, true);
+        const ships = {
+            Carrier: 5,
+            Battleship: 4,
+            Destroyer: 3,
+            Submarine: 3,
+            "Patrol Boat": 2,
+        };
 
-        this.renderBoard(this.player.board, "player-board");
-        this.renderBoard(this.computer.board, "computer-board");
+        for (const ship in ships) {
+            const shipDiv = document.createElement("div");
+
+            shipDiv.draggable = true;
+            shipDiv.dataset.length = ships[ship];
+            shipDiv.dataset.shipName = ship;
+
+            shipDiv.classList.add("ship-div");
+            shipDiv.style.gridTemplateColumns = `repeat(${ships[ship]}, 30px)`;
+
+            for (let i = 0; i < ships[ship]; i++) {
+                let shipCell = document.createElement("div");
+                shipCell.classList.add("ship-cell");
+                shipDiv.append(shipCell);
+            }
+            shipContainer.append(shipDiv);
+        }
+    }
+
+    #setUpPlayerBoard() {
+        this.#setUpShipItems();
+        let draggedShip = null;
+
+        document.addEventListener("drag", (e) => {
+            draggedShip = e.target;
+            text_box.textContent = `Place your ${draggedShip.dataset.shipName}`;
+        });
+
+        const board = document.getElementById("player-board");
+        board.addEventListener("dragover", (e) => {
+            e.preventDefault();
+        });
+
+        board.addEventListener("drop", (e) => {
+            e.preventDefault();
+
+            let x = parseInt(e.target.dataset.x);
+            let y = parseInt(e.target.dataset.y);
+            let length = parseInt(draggedShip.dataset.length);
+            let shipName = draggedShip.dataset.shipName;
+
+            if (this.player.board.isPlacementValid(new Ship(length), x, y)) {
+                this.player.board.placeShips(new Ship(length), x, y);
+                this.#renderBoard(this.player.board, "player-board");
+
+                text_box.textContent = "Place next ship";
+                draggedShip.remove();
+            } else {
+                text_box.textContent = `Invalid placement for ${shipName}`;
+            }
+
+            if (!document.querySelector(".ship-container").hasChildNodes()) {
+                text_box.textContent = "Game start. Your turn.";
+                this.#gameStart = true;
+
+                document
+                    .querySelectorAll(".cell")
+                    .forEach((cell) => cell.classList.remove("ship"));
+
+                document
+                    .getElementById("computer-board")
+                    .classList.remove("disabled-board");
+            }
+        });
+    }
+
+    #arrangeShips() {
+        this.#setUpComputerBoard();
+
+        text_box.textContent = "Place your ships";
+        document
+            .getElementById("computer-board")
+            .classList.add("disabled-board");
+
+        this.#setUpPlayerBoard();
+
+        this.#renderBoard(this.player.board, "player-board");
+        this.#renderBoard(this.computer.board, "computer-board");
     }
 
     playerMove(x, y) {
         this.player.attack(this.computer.board, x, y);
-        this.renderBoard(this.computer.board, "computer-board");
-        this.updateShipStatus();
+        this.#renderBoard(this.computer.board, "computer-board");
+        this.#updateShipStatus();
 
         if (this.computer.board.allShipsSunk()) {
             text_box.textContent = "You win! 🎉";
-            this.renderBoard(this.computer.board, "computer-board");
-            this.disableBoards();
+            this.#renderBoard(this.computer.board, "computer-board");
+            this.#disableBoards();
             return;
         }
 
@@ -92,12 +177,12 @@ class Gamehandler {
 
     computerMove(result = "") {
         result = this.computer.smartAttack(this.player.board);
-        this.renderBoard(this.player.board, "player-board");
-        this.updateShipStatus();
+        this.#renderBoard(this.player.board, "player-board");
+        this.#updateShipStatus();
 
         if (this.player.board.allShipsSunk()) {
             text_box.textContent = "Computer wins! 🎊";
-            this.disableBoards();
+            this.#disableBoards();
             return;
         }
 
@@ -115,14 +200,14 @@ class Gamehandler {
         }
     }
 
-    disableBoards() {
+    #disableBoards() {
         document.getElementById("player-board").classList.add("disabled-board");
         document
             .getElementById("computer-board")
             .classList.add("disabled-board");
     }
 
-    updateShipStatus() {
+    #updateShipStatus() {
         const playerStatusList = document.getElementById("player-ship-status");
         const computerStatusList = document.getElementById(
             "computer-ship-status"
@@ -131,7 +216,7 @@ class Gamehandler {
         playerStatusList.innerHTML = "";
         computerStatusList.innerHTML = "";
 
-        const ships = [
+        const shipsArray = [
             "Carrier",
             "Battleship",
             "Destroyer",
@@ -141,7 +226,7 @@ class Gamehandler {
 
         this.player.board.ships.forEach((ship, index) => {
             const shipItem = document.createElement("li");
-            shipItem.textContent = `${ships[index]} (${ship.length})`;
+            shipItem.textContent = `${shipsArray[index]} (${ship.length})`;
 
             if (ship.isSunk()) {
                 shipItem.classList.add("sunk");
@@ -151,7 +236,7 @@ class Gamehandler {
 
         this.computer.board.ships.forEach((ship, index) => {
             const shipItem = document.createElement("li");
-            shipItem.textContent = `${ships[index]} (${ship.length})`;
+            shipItem.textContent = `${shipsArray[index]} (${ship.length})`;
 
             if (ship.isSunk()) {
                 shipItem.classList.add("sunk");
