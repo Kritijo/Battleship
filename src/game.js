@@ -1,5 +1,12 @@
 import "./styles/game.css";
 import { Ship, Player } from "./gameLogic.js";
+import game_start_audio from "./sounds/game_start.wav";
+import place_audio from "./sounds/place.wav";
+import hit_audio from "./sounds/hit.mp3";
+import miss_audio from "./sounds/miss.wav";
+import lose_audio from "./sounds/lose.wav";
+import win_audio from "./sounds/win.wav";
+
 
 class Gamehandler {
     constructor() {
@@ -9,6 +16,12 @@ class Gamehandler {
     }
 
     #gameStart = false;
+    #gameStartAudio = new Audio(game_start_audio);
+    #shipsPlaceAudio = new Audio(place_audio);
+    #hitAudio = new Audio(hit_audio);
+    #missAudio = new Audio(miss_audio);
+    #compWinsAudio = new Audio(lose_audio);
+    #winAudio = new Audio(win_audio);
 
     #renderBoard(gameboard, elementId) {
         const boardElement = document.getElementById(elementId);
@@ -115,6 +128,7 @@ class Gamehandler {
                 this.player.board.placeShips(new Ship(length), x, y);
                 this.#renderBoard(this.player.board, "player-board");
 
+                this.#shipsPlaceAudio.play();
                 text_box.textContent = "Place next ship";
                 draggedShip.remove();
             } else {
@@ -124,6 +138,7 @@ class Gamehandler {
             if (!document.querySelector(".ship-container").hasChildNodes()) {
                 text_box.textContent = "Game start. Your turn.";
                 this.#gameStart = true;
+                this.#gameStartAudio.play();
 
                 document
                     .querySelectorAll(".cell")
@@ -158,15 +173,17 @@ class Gamehandler {
         if (this.computer.board.allShipsSunk()) {
             text_box.textContent = "You win! 🎉";
             this.#renderBoard(this.computer.board, "computer-board");
+            this.#winAudio.play();
             this.#disableBoards();
             return;
         }
 
         if (this.computer.board.board[x][y] === "hit") {
             text_box.textContent = "Nice hit! Go again.";
+            this.#hitAudio.play();
             return;
         }
-
+        this.#missAudio.play();
         document
             .getElementById("computer-board")
             .classList.add("disabled-board");
@@ -182,12 +199,14 @@ class Gamehandler {
 
         if (this.player.board.allShipsSunk()) {
             text_box.textContent = "Computer wins! 🎊";
+            this.#compWinsAudio.play();
             this.#disableBoards();
             return;
         }
 
         if (result === "hit") {
             text_box.textContent = "Opponent hit! Attacking again...";
+            this.#hitAudio.play();
             setTimeout(() => this.computerMove(result), 800);
         } else {
             text_box.textContent = "Your turn.";
