@@ -1,5 +1,5 @@
 import "./styles/game.css";
-import { Ship, Player } from "./gameLogic.js";
+import { Ship, Player, Gameboard } from "./gameLogic.js";
 import game_start_audio from "./sounds/game_start.wav";
 import place_audio from "./sounds/place.wav";
 import hit_audio from "./sounds/hit.mp3";
@@ -105,11 +105,20 @@ class Gamehandler {
     #setUpPlayerBoard() {
         this.#setUpShipItems();
         let draggedShip = null;
+        let grabbedCellIndex = 0;
 
-        document.addEventListener("drag", (e) => {
-            draggedShip = e.target;
-            text_box.textContent = `Place your ${draggedShip.dataset.shipName}`;
-        });
+        document
+            .querySelector(".ship-container")
+            .addEventListener("mousedown", (e) => {
+                if (e.target.classList.contains("ship-cell")) {
+                    draggedShip = e.target.closest(".ship-div");
+                    const shipCells = Array.from(draggedShip.children);
+
+                    grabbedCellIndex = shipCells.indexOf(e.target);
+
+                    text_box.textContent = `Place your ${draggedShip.dataset.shipName}`;
+                }
+            });
 
         const board = document.getElementById("player-board");
         board.addEventListener("dragover", (e) => {
@@ -123,6 +132,8 @@ class Gamehandler {
             let y = parseInt(e.target.dataset.y);
             let length = parseInt(draggedShip.dataset.length);
             let shipName = draggedShip.dataset.shipName;
+
+            y -= grabbedCellIndex;
 
             if (this.player.board.isPlacementValid(new Ship(length), x, y)) {
                 this.player.board.placeShips(new Ship(length), x, y);
@@ -229,15 +240,18 @@ class Gamehandler {
     }
 
     #resetGame() {
-        this.player = new Player();
-        this.computer = new Player(true);
+        this.player.board = new Gameboard();
+        this.computer.board = new Gameboard();
         this.#gameStart = false;
 
         this.#setUpShipItems();
-        document
-            .getElementById("player-board")
-            .classList.remove("disabled-board");
 
+        const board = document.getElementById("player-board");
+        board.classList.remove("disabled-board");
+
+        const newBoard = board.cloneNode(true);
+        board.parentNode.replaceChild(newBoard, board);
+       
         this.#arrangeShips();
         document.getElementById("player-ship-status").innerHTML = "";
         document.getElementById("computer-ship-status").innerHTML = "";
