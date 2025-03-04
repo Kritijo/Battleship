@@ -112,13 +112,32 @@ class Gamehandler {
             .addEventListener("mousedown", (e) => {
                 if (e.target.classList.contains("ship-cell")) {
                     draggedShip = e.target.closest(".ship-div");
+                    draggedShip.dataset.vertical =
+                        draggedShip.dataset.vertical || "false";
+
                     const shipCells = Array.from(draggedShip.children);
 
                     grabbedCellIndex = shipCells.indexOf(e.target);
 
-                    text_box.textContent = `Place your ${draggedShip.dataset.shipName}`;
+                    text_box.textContent = `Place your ${draggedShip.dataset.shipName} [or press 'R' to rotate]`;
                 }
             });
+
+        document.addEventListener("keydown", rotateOnKeyDown);
+
+        function rotateOnKeyDown(e) {
+            if (e.key === "r" && draggedShip) {
+                draggedShip.dataset.vertical =
+                    draggedShip.dataset.vertical === "true" ? "false" : "true";
+                if (draggedShip.dataset.vertical === "true") {
+                    draggedShip.style.gridTemplateColumns = "30px";
+                    draggedShip.style.gridTemplateRows = `repeat(${draggedShip.dataset.length}, 30px)`;
+                } else {
+                    draggedShip.style.gridTemplateColumns = `repeat(${draggedShip.dataset.length}, 30px)`;
+                    draggedShip.style.gridTemplateRows = "30px";
+                }
+            }
+        }
 
         const board = document.getElementById("player-board");
         board.addEventListener("dragover", (e) => {
@@ -132,21 +151,36 @@ class Gamehandler {
             let y = parseInt(e.target.dataset.y);
             let length = parseInt(draggedShip.dataset.length);
             let shipName = draggedShip.dataset.shipName;
+            let isVertical = draggedShip.dataset.vertical === "true";
 
-            y -= grabbedCellIndex;
+            isVertical ? (x -= grabbedCellIndex) : (y -= grabbedCellIndex);
 
-            if (this.player.board.isPlacementValid(new Ship(length), x, y)) {
-                this.player.board.placeShips(new Ship(length), x, y);
+            if (
+                this.player.board.isPlacementValid(
+                    new Ship(length),
+                    x,
+                    y,
+                    isVertical
+                )
+            ) {
+                this.player.board.placeShips(
+                    new Ship(length),
+                    x,
+                    y,
+                    isVertical
+                );
                 this.#renderBoard(this.player.board, "player-board");
 
                 this.#shipsPlaceAudio.play();
                 text_box.textContent = "Place next ship";
+                draggedShip.draggable = false;
                 draggedShip.remove();
             } else {
                 text_box.textContent = `Invalid placement for ${shipName}`;
             }
 
             if (!document.querySelector(".ship-container").hasChildNodes()) {
+                document.removeEventListener("keydown", rotateOnKeyDown);
                 text_box.textContent = "Game start. Your turn.";
                 this.#gameStart = true;
                 this.#gameStartAudio.play();

@@ -126,8 +126,9 @@ body {
 }
 
 .ship-cell {
-    background: linear-gradient(white, #89bad0);
-    /* border: 2px solid rgb(233, 231, 231); */
+    background: #064c6c;
+    border: 2px solid rgb(233, 231, 231);
+    box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.2);
 }
 
 .reset-bttn {
