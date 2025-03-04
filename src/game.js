@@ -7,7 +7,6 @@ import miss_audio from "./sounds/miss.wav";
 import lose_audio from "./sounds/lose.wav";
 import win_audio from "./sounds/win.wav";
 
-
 class Gamehandler {
     constructor() {
         this.player = new Player();
@@ -74,6 +73,7 @@ class Gamehandler {
 
     #setUpShipItems() {
         const shipContainer = document.querySelector(".ship-container");
+        shipContainer.innerHTML = "";
 
         const ships = {
             Carrier: 5,
@@ -224,6 +224,33 @@ class Gamehandler {
         document
             .getElementById("computer-board")
             .classList.add("disabled-board");
+
+        this.#playAgain();
+    }
+
+    #resetGame() {
+        this.player = new Player();
+        this.computer = new Player(true);
+        this.#gameStart = false;
+
+        this.#setUpShipItems();
+        document
+            .getElementById("player-board")
+            .classList.remove("disabled-board");
+
+        this.#arrangeShips();
+        document.getElementById("player-ship-status").innerHTML = "";
+        document.getElementById("computer-ship-status").innerHTML = "";
+    }
+
+    #playAgain() {
+        const shipContainer = document.querySelector(".ship-container");
+        const startAgain = document.createElement("button");
+
+        startAgain.textContent = "Play again";
+        startAgain.classList.add("reset-bttn");
+        startAgain.addEventListener("click", () => this.#resetGame());
+        shipContainer.append(startAgain);
     }
 
     #updateShipStatus() {
